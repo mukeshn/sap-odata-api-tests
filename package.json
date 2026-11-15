@@ -1,0 +1,26 @@
+{
+  "name": "sap-odata-api-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OData V2/V4 API tests for SAP S/4HANA style services: query options, CSRF, deep insert, errors",
+  "author": "Mukesh Ningadali",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "sut": "node sut/server.mjs",
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2"
+  }
+}
