@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Manage Sales Orders</title><link rel="stylesheet" href="/assets/base.css"><link rel="stylesheet" href="fiori.css"></head>
+<body>
+<div class="sapMPage">
+  <div class="sapUiCompFilterBar" id="listReport--filterBar">
+    <div><label for="listReport--soldToParty-inner">Sold-To Party</label>
+      <div class="sapMInputBase"><input id="listReport--soldToParty-inner"><button class="sapMInputValHelp" id="listReport--soldToParty-vhi" title="Show Value Help" aria-label="Show Value Help">⧉</button></div></div>
+    <div><label for="listReport--status-inner">Overall Status</label>
+      <select id="listReport--status-inner"><option value="">All</option><option value="A">Not Yet Processed</option><option value="B">Partially Processed</option><option value="C">Completely Processed</option></select></div>
+    <div><label for="listReport--po-inner">Customer Reference</label><input id="listReport--po-inner"></div>
+    <div><button class="btn" id="listReport--btnGo">Go</button> <button class="btn secondary" id="listReport--btnClear">Clear</button></div>
+  </div>
+  <div class="sapMListTbl">
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.5rem 1rem">
+      <h3 id="listReport--tableTitle" style="margin:0">Sales Orders (0)</h3>
+      <a class="btn" id="listReport--btnCreate" href="/sap/create.html">Create</a>
+    </div>
+    <table id="listReport--table" role="grid" aria-label="Sales Orders">
+      <thead><tr>
+        <th id="listReport--col-SalesOrder" data-sort="SalesOrder" aria-sort="none" role="columnheader">Sales Order</th>
+        <th id="listReport--col-SoldToParty" data-sort="SoldToParty" aria-sort="none">Sold-To Party</th>
+        <th id="listReport--col-PO" data-sort="PurchaseOrderByCustomer" aria-sort="none">Customer Reference</th>
+        <th id="listReport--col-Date">Order Date</th>
+        <th id="listReport--col-Amount" data-sort="TotalNetAmount" aria-sort="none" style="text-align:right">Net Value</th>
+        <th id="listReport--col-Status">Overall Status</th>
+      </tr></thead>
+      <tbody id="listReport--table-tblBody"></tbody>
+    </table>
+    <p id="listReport--table-nodata" class="hidden" style="background:#fff;padding:1rem;margin:0">No data found. Try adjusting the filter settings.</p>
+    <button class="sapMGrowingListTrigger" id="listReport--table-trigger">More <span id="listReport--table-triggerInfo"></span></button>
+  </div>
+</div>
+<script type="module">
+  import { shell, odata, sapDate, amount, STATUS, valueHelp } from './ui.js';
+  shell('Manage Sales Orders', true);
+  const PAGE = 5;
+  const $ = (id) => document.getElementById(id);
+  let shown = 0, total = 0, orderBy = 'SalesOrder desc';
+  const params = new URLSearchParams(location.search);
+  if (params.get('status')) $('listReport--status-inner').value = params.get('status');
+  const filter = () => {
+    const f = [];
+    if ($('listReport--soldToParty-inner').value) f.push(`SoldToParty eq '${$('listReport--soldToParty-inner').value}'`);
+    if ($('listReport--status-inner').value) f.push(`OverallSDProcessStatus eq '${$('listReport--status-inner').value}'`);
+    if ($('listReport--po-inner').value) f.push(`substringof('${$('listReport--po-inner').value.replace(/'/g, "''")}',PurchaseOrderByCustomer)`);
+    return f.join(' and ');
+  };
+  async function load(append = false) {
+    if (!append) { shown = 0; $('listReport--table-tblBody').innerHTML = ''; }
+    const qs = new URLSearchParams({ $inlinecount: 'allpages', $top: PAGE, $skip: shown, $orderby: orderBy, $format: 'json' });
+    if (filter()) qs.set('$filter', filter());
+    const { data } = await odata('/API_SALES_ORDER_SRV/A_SalesOrder?' + qs);
+    total = Number(data.d.__count);
+    shown += data.d.results.length;
+    $('listReport--table-tblBody').insertAdjacentHTML('beforeend', data.d.results.map((o) => `
+      <tr class="sapMListTblRow" tabindex="0" id="listReport--table-row-${o.SalesOrder}" data-key="${o.SalesOrder}">
+        <td data-col="SalesOrder"><a href="/sap/salesorder.html?id=${o.SalesOrder}">${o.SalesOrder}</a></td><td data-col="SoldToParty">${o.SoldToParty}</td>
+        <td data-col="PurchaseOrderByCustomer">${o.PurchaseOrderByCustomer}</td><td data-col="SalesOrderDate">${sapDate(o.SalesOrderDate)}</td>
+        <td data-col="TotalNetAmount" data-value="${o.TotalNetAmount}" style="text-align:right">${amount(o.TotalNetAmount)}</td>
+        <td data-col="OverallSDProcessStatus"><span class="sapMObjStatus ${o.OverallSDProcessStatus}">${STATUS[o.OverallSDProcessStatus]}</span></td></tr>`).join(''));
+    $('listReport--tableTitle').textContent = `Sales Orders (${total})`;
+    $('listReport--table-nodata').classList.toggle('hidden', total > 0);
+    $('listReport--table-trigger').classList.toggle('hidden', shown >= total);
+    $('listReport--table-triggerInfo').textContent = `[ ${shown} / ${total} ]`;
+  }
+  $('listReport--btnGo').addEventListener('click', () => load());
+  $('listReport--btnClear').addEventListener('click', () => { ['listReport--soldToParty-inner', 'listReport--status-inner', 'listReport--po-inner'].forEach((id) => ($(id).value = '')); load(); });
+  $('listReport--table-trigger').addEventListener('click', () => load(true));
+  $('listReport--soldToParty-vhi').addEventListener('click', () => valueHelp($('listReport--soldToParty-inner')));
+  document.querySelectorAll('th[data-sort]').forEach((th) => th.addEventListener('click', () => {
+    const asc = th.getAttribute('aria-sort') !== 'ascending';
+    document.querySelectorAll('th[data-sort]').forEach((x) => x.setAttribute('aria-sort', 'none'));
+    th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
+    orderBy = `${th.dataset.sort} ${asc ? 'asc' : 'desc'}`;
+    load();
+  }));
+  $('listReport--table-tblBody').addEventListener('click', (e) => { const tr = e.target.closest('tr[data-key]'); if (tr && e.target.tagName !== 'A') location.href = `/sap/salesorder.html?id=${tr.dataset.key}`; });
+  load();
+</script>
+</body>
+</html>

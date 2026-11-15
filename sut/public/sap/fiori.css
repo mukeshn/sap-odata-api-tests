@@ -1,0 +1,18 @@
+body { background: #f7f7f7; font-family: "72", "72full", Arial, Helvetica, sans-serif; }
+.sapUshellShellHead { display:flex; align-items:center; gap:1rem; height:2.75rem; padding:0 1rem; background:#354a5f; color:#fff; }
+.sapUshellShellHead a, .sapUshellShellHead button { color:#fff; background:none; border:0; font-size:1rem; text-decoration:none; cursor:pointer; }
+#meAreaHeaderButton { background:#0a6ed1; border-radius:50%; width:2rem; height:2rem; display:grid; place-items:center; font-size:.8rem; }
+.sapUiLocalBusyIndicator { position:fixed; inset:0; background:rgba(255,255,255,.5); display:grid; place-items:center; z-index:50; }
+.sapMMessageToast { position:fixed; bottom:3rem; left:50%; transform:translateX(-50%); background:rgba(50,54,58,.9); color:#fff; padding:.75rem 1.25rem; border-radius:.25rem; z-index:60; }
+.sapMPage { max-width: 1200px; margin: 1rem auto; padding: 0 1rem; }
+.sapUiCompFilterBar { background:#fff; padding:1rem; display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+.sapUiCompFilterBar > div { min-width: 200px; }
+.sapMInputBase { display:flex; } .sapMInputBase input { border-radius:.25rem 0 0 .25rem; } .sapMInputValHelp { border:1px solid #b8c0c8; border-left:0; background:#fff; padding:0 .6rem; cursor:pointer; border-radius:0 .25rem .25rem 0; }
+.sapMListTbl { margin-top:1rem; box-shadow:0 1px 2px rgba(0,0,0,.1); } .sapMListTblRow { cursor:pointer; } .sapMListTblRow:hover { background:#f5faff; }
+.sapMObjStatus.A { color:#e9730c; } .sapMObjStatus.B { color:#0a6ed1; } .sapMObjStatus.C { color:#107e3e; }
+.sapMGrowingListTrigger { width:100%; padding:.75rem; background:#fff; border:0; border-top:1px solid #e5e5e5; cursor:pointer; color:#0a6ed1; }
+.sapUshellTileContainer { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem; }
+.sapMGT { width:11rem; height:11rem; background:#fff; border-radius:1rem; padding:1rem; box-shadow:0 0 0 1px rgba(0,0,0,.1); cursor:pointer; display:flex; flex-direction:column; text-decoration:none; color:#32363a; }
+.sapMGT:hover { box-shadow:0 0 0 2px #0a6ed1; } .sapMGTHdrTxt { font-size:1rem; } .sapMGTSubHdrTxt { font-size:.8rem; color:#6a6d70; } .sapMNCValue { font-size:2.5rem; color:#0a6ed1; margin-top:auto; }
+.sapUxAPObjectPageHeader { background:#fff; padding:1rem 1.5rem; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+.sapMMsgPopoverBtn { background:#bb0000; color:#fff; border:0; border-radius:.25rem; padding:.3rem .7rem; }

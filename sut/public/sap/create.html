@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Create Sales Order</title><link rel="stylesheet" href="/assets/base.css"><link rel="stylesheet" href="fiori.css"></head>
+<body>
+<div class="sapMPage">
+  <section class="card">
+    <h1>Create Standard Order</h1>
+    <div class="row">
+      <div><label for="createSO--orderType-inner">Order Type</label><select id="createSO--orderType-inner"><option value="OR">OR - Standard Order</option><option value="CR">CR - Credit Memo Request</option></select></div>
+      <div><label for="createSO--salesOrg-inner">Sales Organization</label><input id="createSO--salesOrg-inner" value="1710"></div>
+      <div><label for="createSO--soldToParty-inner">Sold-To Party *</label>
+        <div class="sapMInputBase"><input id="createSO--soldToParty-inner" aria-required="true"><button class="sapMInputValHelp" id="createSO--soldToParty-vhi" title="Show Value Help" aria-label="Show Value Help">⧉</button></div></div>
+      <div><label for="createSO--po-inner">Customer Reference</label><input id="createSO--po-inner"></div>
+    </div>
+  </section>
+  <section class="card">
+    <div style="display:flex;justify-content:space-between"><h2 id="createSO--itemsTitle">Items (0)</h2><button class="btn secondary" id="createSO--addItem">Add Item</button></div>
+    <table id="createSO--itemsTable"><thead><tr><th>Item</th><th>Material</th><th>Quantity</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+  <footer style="display:flex;justify-content:flex-end;gap:.5rem;align-items:center">
+    <button class="sapMMsgPopoverBtn hidden" id="createSO--messagePopoverBtn" aria-haspopup="dialog"></button>
+    <button class="btn" id="createSO--save">Save</button> <a class="btn secondary" href="/sap/salesorders.html" id="createSO--cancel">Cancel</a>
+  </footer>
+  <dialog id="createSO--messagePopover" aria-label="Messages"><h3>Messages</h3><ul id="createSO--messageList"></ul><button class="btn secondary" id="createSO--messagePopover-close">Close</button></dialog>
+</div>
+<script type="module">
+  import { shell, odata, toast, valueHelp } from './ui.js';
+  shell('Create Sales Order', true);
+  const $ = (id) => document.getElementById(id);
+  let rows = 0;
+  const addRow = () => {
+    rows += 1;
+    const n = rows * 10;
+    $('createSO--itemsTable').querySelector('tbody').insertAdjacentHTML('beforeend', `<tr id="createSO--item-${n}"><td>${n}</td>
+      <td><select id="createSO--item-${n}-material" aria-label="Material for item ${n}"><option value="">Select…</option><option>TG11</option><option>TG12</option><option>FG126</option><option>RM14</option><option value="XX99">XX99 (legacy)</option></select></td>
+      <td><input id="createSO--item-${n}-qty" type="number" min="0" value="1" aria-label="Quantity for item ${n}"></td>
+      <td><button class="btn secondary" data-remove="${n}" aria-label="Remove item ${n}">✕</button></td></tr>`);
+    $('createSO--itemsTitle').textContent = `Items (${$('createSO--itemsTable').querySelectorAll('tbody tr').length})`;
+  };
+  $('createSO--addItem').addEventListener('click', addRow);
+  $('createSO--itemsTable').addEventListener('click', (e) => { const n = e.target.dataset.remove; if (n) { $(`createSO--item-${n}`).remove(); $('createSO--itemsTitle').textContent = `Items (${$('createSO--itemsTable').querySelectorAll('tbody tr').length})`; } });
+  $('createSO--soldToParty-vhi').addEventListener('click', () => valueHelp($('createSO--soldToParty-inner')));
+  $('createSO--messagePopoverBtn').addEventListener('click', () => $('createSO--messagePopover').showModal());
+  $('createSO--messagePopover-close').addEventListener('click', () => $('createSO--messagePopover').close());
+  $('createSO--save').addEventListener('click', async () => {
+    const items = [...$('createSO--itemsTable').querySelectorAll('tbody tr')].map((tr) => ({ Material: tr.querySelector('select').value, RequestedQuantity: tr.querySelector('input').value }));
+    const body = { SalesOrderType: $('createSO--orderType-inner').value, SalesOrganization: $('createSO--salesOrg-inner').value, DistributionChannel: '10', OrganizationDivision: '00', SoldToParty: $('createSO--soldToParty-inner').value.trim(), PurchaseOrderByCustomer: $('createSO--po-inner').value, to_Item: { results: items } };
+    try {
+      const { data, sapMessage } = await odata('/API_SALES_ORDER_SRV/A_SalesOrder', { method: 'POST', body });
+      $('createSO--messagePopoverBtn').classList.add('hidden');
+      toast(sapMessage?.message || `Standard Order ${data.d.SalesOrder} has been saved`);
+      setTimeout(() => (location.href = `/sap/salesorder.html?id=${data.d.SalesOrder}`), 1200);
+    } catch (e) {
+      const details = e.data?.error?.innererror?.errordetails || [{ message: e.message }];
+      $('createSO--messageList').innerHTML = details.map((d) => `<li class="sapMMsgViewItem" data-target="${d.target || ''}">${d.message}</li>`).join('');
+      $('createSO--messagePopoverBtn').textContent = `⚠ ${details.length}`;
+      $('createSO--messagePopoverBtn').classList.remove('hidden');
+      $('createSO--messagePopover').showModal();
+    }
+  });
+</script>
+</body>
+</html>

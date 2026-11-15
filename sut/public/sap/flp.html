@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Home | SAP Fiori launchpad (mock)</title><link rel="stylesheet" href="/assets/base.css"><link rel="stylesheet" href="fiori.css"></head>
+<body>
+<div class="sapMPage">
+  <h2 id="__section0-title">Sales - Order Management</h2>
+  <div class="sapUshellTileContainer" role="list">
+    <a class="sapMGT" id="__tile0" role="listitem" href="/sap/salesorders.html" aria-label="Manage Sales Orders">
+      <span class="sapMGTHdrTxt">Manage Sales Orders</span><span class="sapMGTSubHdrTxt">Open orders</span>
+      <span class="sapMNCValue" id="__tile0-kpi">…</span></a>
+    <a class="sapMGT" id="__tile1" role="listitem" href="/sap/create.html" aria-label="Create Sales Order">
+      <span class="sapMGTHdrTxt">Create Sales Order</span><span class="sapMGTSubHdrTxt">VA01</span></a>
+    <a class="sapMGT" id="__tile2" role="listitem" href="/sap/salesorders.html?status=C" aria-label="Completed Sales Orders">
+      <span class="sapMGTHdrTxt">Completed Orders</span><span class="sapMGTSubHdrTxt">This year</span>
+      <span class="sapMNCValue" id="__tile2-kpi">…</span></a>
+  </div>
+</div>
+<script type="module">
+  import { shell, odata } from './ui.js';
+  shell('Home');
+  const open = await odata("/API_SALES_ORDER_SRV/A_SalesOrder/$count?$filter=OverallSDProcessStatus ne 'C'");
+  const done = await odata("/API_SALES_ORDER_SRV/A_SalesOrder/$count?$filter=OverallSDProcessStatus eq 'C'");
+  document.getElementById('__tile0-kpi').textContent = open.data;
+  document.getElementById('__tile2-kpi').textContent = done.data;
+</script>
+</body>
+</html>

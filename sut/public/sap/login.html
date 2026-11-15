@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Logon | SAP S/4HANA (mock)</title><link rel="stylesheet" href="/assets/base.css"><link rel="stylesheet" href="fiori.css">
+<style>.logon{max-width:360px;margin:5rem auto;background:#fff;padding:2rem;border-radius:.5rem;box-shadow:0 2px 8px rgba(0,0,0,.15)}</style></head>
+<body>
+  <div class="logon">
+    <h1 style="font-weight:400">SAP S/4HANA</h1>
+    <form id="LOGIN_FORM" novalidate>
+      <label for="USERNAME_FIELD-inner">User</label><input id="USERNAME_FIELD-inner" name="sap-user" autocomplete="username">
+      <label for="PASSWORD_FIELD-inner">Password</label><input id="PASSWORD_FIELD-inner" name="sap-password" type="password">
+      <label for="LANGUAGE_SELECT">Language</label><select id="LANGUAGE_SELECT"><option value="EN">English</option><option value="DE">Deutsch</option></select>
+      <div id="LOGIN_ERROR" class="alert error hidden" role="alert"></div>
+      <p><button id="LOGIN_LINK" class="btn" type="submit" style="width:100%">Log On</button></p>
+    </form>
+  </div>
+<script type="module">
+  const f = document.getElementById('LOGIN_FORM');
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const res = await fetch('/sap/bc/ui2/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: f['sap-user'].value, password: f['sap-password'].value }), credentials: 'include' });
+    if (!res.ok) { const el = document.getElementById('LOGIN_ERROR'); el.textContent = (await res.json()).message; el.classList.remove('hidden'); return; }
+    location.href = '/sap/flp.html#Shell-home';
+  });
+</script>
+</body>
+</html>

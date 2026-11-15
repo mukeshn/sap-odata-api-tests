@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sales Order</title><link rel="stylesheet" href="/assets/base.css"><link rel="stylesheet" href="fiori.css"></head>
+<body>
+<div class="sapUxAPObjectPageHeader">
+  <h1 id="objectPage--title">Sales Order <span id="objectPage--soNumber"></span></h1>
+  <p>Status: <span id="objectPage--status" class="sapMObjStatus"></span> · Net value: <strong id="objectPage--netValue"></strong></p>
+  <div><button class="btn" id="objectPage--edit">Edit</button> <button class="btn secondary" id="objectPage--delete">Delete</button></div>
+</div>
+<div class="sapMPage">
+  <section class="card"><h2>General Information</h2>
+    <dl class="row">
+      <div><dt class="muted">Sold-To Party</dt><dd id="objectPage--soldToParty"></dd></div>
+      <div><dt class="muted">Sales Organization</dt><dd id="objectPage--salesOrg"></dd></div>
+      <div><dt class="muted">Customer Reference</dt><dd><span id="objectPage--po-text"></span><input id="objectPage--po-inner" class="hidden"></dd></div>
+      <div><dt class="muted">Order Date</dt><dd id="objectPage--date"></dd></div>
+    </dl>
+    <div id="objectPage--footer" class="hidden"><button class="btn" id="objectPage--save">Save</button> <button class="btn secondary" id="objectPage--cancel">Cancel</button></div>
+  </section>
+  <section class="card"><h2 id="objectPage--itemsTitle">Items</h2>
+    <table id="objectPage--itemsTable"><thead><tr><th>Item</th><th>Material</th><th>Description</th><th>Quantity</th><th style="text-align:right">Net Amount</th></tr></thead><tbody></tbody></table>
+  </section>
+  <dialog id="confirmDeleteDialog"><p id="confirmDeleteDialog-text">Delete this sales order?</p><button class="btn" id="confirmDeleteDialog-ok">Delete</button> <button class="btn secondary" id="confirmDeleteDialog-cancel">Cancel</button></dialog>
+  <div id="objectPage--error" class="alert error hidden" role="alert"></div>
+</div>
+<script type="module">
+  import { shell, odata, sapDate, amount, STATUS, toast } from './ui.js';
+  shell('Sales Order', true);
+  const $ = (id) => document.getElementById(id);
+  const id = new URLSearchParams(location.search).get('id');
+  async function load() {
+    const { data } = await odata(`/API_SALES_ORDER_SRV/A_SalesOrder('${id}')?$expand=to_Item&$format=json`);
+    const o = data.d;
+    $('objectPage--soNumber').textContent = o.SalesOrder;
+    $('objectPage--status').textContent = STATUS[o.OverallSDProcessStatus];
+    $('objectPage--status').className = 'sapMObjStatus ' + o.OverallSDProcessStatus;
+    $('objectPage--netValue').textContent = amount(o.TotalNetAmount);
+    $('objectPage--soldToParty').textContent = o.SoldToParty;
+    $('objectPage--salesOrg').textContent = o.SalesOrganization;
+    $('objectPage--po-text').textContent = o.PurchaseOrderByCustomer;
+    $('objectPage--po-inner').value = o.PurchaseOrderByCustomer;
+    $('objectPage--date').textContent = sapDate(o.SalesOrderDate);
+    $('objectPage--itemsTitle').textContent = `Items (${o.to_Item.results.length})`;
+    document.querySelector('#objectPage--itemsTable tbody').innerHTML = o.to_Item.results.map((it) => `<tr><td>${it.SalesOrderItem}</td><td>${it.Material}</td><td>${it.SalesOrderItemText}</td><td>${it.RequestedQuantity} ${it.RequestedQuantityUnit}</td><td style="text-align:right">${amount(it.NetAmount)}</td></tr>`).join('');
+  }
+  const setEdit = (on) => { $('objectPage--po-text').classList.toggle('hidden', on); $('objectPage--po-inner').classList.toggle('hidden', !on); $('objectPage--footer').classList.toggle('hidden', !on); $('objectPage--edit').disabled = on; };
+  const showErr = (msg) => { $('objectPage--error').textContent = msg; $('objectPage--error').classList.remove('hidden'); };
+  $('objectPage--edit').addEventListener('click', () => setEdit(true));
+  $('objectPage--cancel').addEventListener('click', () => setEdit(false));
+  $('objectPage--save').addEventListener('click', async () => {
+    try { await odata(`/API_SALES_ORDER_SRV/A_SalesOrder('${id}')`, { method: 'PATCH', body: { PurchaseOrderByCustomer: $('objectPage--po-inner').value } }); setEdit(false); toast('Your changes have been saved.'); load(); }
+    catch (e) { showErr(e.message); }
+  });
+  $('objectPage--delete').addEventListener('click', () => { $('confirmDeleteDialog-text').textContent = `Delete sales order ${id}?`; $('confirmDeleteDialog').showModal(); });
+  $('confirmDeleteDialog-cancel').addEventListener('click', () => $('confirmDeleteDialog').close());
+  $('confirmDeleteDialog-ok').addEventListener('click', async () => {
+    $('confirmDeleteDialog').close();
+    try { await odata(`/API_SALES_ORDER_SRV/A_SalesOrder('${id}')`, { method: 'DELETE' }); toast(`Sales order ${id} deleted`); setTimeout(() => (location.href = '/sap/salesorders.html'), 800); }
+    catch (e) { showErr(e.message); }
+  });
+  try { await load(); } catch (e) { showErr(e.message); }
+</script>
+</body>
+</html>

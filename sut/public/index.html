@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>System under test</title><link rel="stylesheet" href="/assets/base.css"></head>
+<body>
+<main>
+  <h1>System under test</h1>
+  <p class="muted">Mock applications used by the automated suites in this repository.</p>
+  <ul id="apps"></ul>
+</main>
+<script>
+  const apps = [['shop', '/shop/index.html', 'Summit Supply Co. - storefront'], ['bank', '/bank/login.html', 'Northbridge Bank - online banking'], ['crm', '/crm/login.html', 'Lightning CRM - Salesforce-style UI'], ['sap', '/sap/login.html', 'SAP S/4HANA - Fiori-style apps'], ['retail', '/retail/inventory.html', 'Store Ops - retail inventory']];
+  Promise.all(apps.map(([k, href, label]) => fetch(href, { method: 'GET' }).then((r) => r.ok && `<li><a href="${href}">${label}</a></li>`).catch(() => ''))).then((li) => (document.getElementById('apps').innerHTML = li.filter(Boolean).join('')));
+</script>
+</body>
+</html>
